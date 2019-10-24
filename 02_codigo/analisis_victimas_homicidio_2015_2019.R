@@ -7,3 +7,10 @@ source("02_codigo/paquetes_setup_tema.R")
 victimas <- 
   read_excel("../../../../../10 recursos/datos/snsp/victimas/Estatal-V°ctimas - septiembre 2019.xlsx") %>% 
   clean_names()
+
+### Tidyear datos ----
+victimas <- 
+  victimas %>% 
+  gather(enero:diciembre, 
+         key = "mes",
+         value = "num_victimas")
