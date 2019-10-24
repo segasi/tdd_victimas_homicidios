@@ -31,4 +31,4 @@ victimas <-
                              mes == "noviembre" ~ 11,
                              mes == "diciembre" ~ 12), 
          fecha = make_date(ano, mes_num)) %>% 
-  select(fecha, año = ano, mes, everything())
+  select(fecha, año = ano, mes, mes_num, everything())
