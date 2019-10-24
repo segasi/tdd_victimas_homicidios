@@ -13,7 +13,7 @@ victimas <-
   victimas %>% 
   gather(enero:diciembre, 
          key = "mes",
-         value = "num_victimas")
+         value = "numero")
 
 ### Generar diversas variable relacionadas con el tiempo y reordenar columnas ----
 victimas <- 
