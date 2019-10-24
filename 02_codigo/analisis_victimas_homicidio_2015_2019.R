@@ -14,3 +14,21 @@ victimas <-
   gather(enero:diciembre, 
          key = "mes",
          value = "num_victimas")
+
+### Generar diversas variable relacionadas con el tiempo y reordenar columnas ----
+
+victimas %>% 
+  mutate(mes_num = case_when(mes == "enero" ~ 1,
+                             mes == "febrero" ~ 2,
+                             mes == "marzo" ~ 3,
+                             mes == "abril" ~ 4,
+                             mes == "mayo" ~ 5,
+                             mes == "junio" ~ 6,
+                             mes == "julio" ~ 7,
+                             mes == "agosto" ~ 8,
+                             mes == "septiembre" ~ 9,
+                             mes == "octubre" ~ 10,
+                             mes == "noviembre" ~ 11,
+                             mes == "diciembre" ~ 12), 
+         fecha = make_date(ano, mes_num)) %>% 
+  select(fecha, año = ano, mes, everything())
