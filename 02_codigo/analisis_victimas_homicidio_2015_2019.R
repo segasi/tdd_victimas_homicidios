@@ -16,8 +16,8 @@ victimas <-
          value = "num_victimas")
 
 ### Generar diversas variable relacionadas con el tiempo y reordenar columnas ----
-
-victimas %>% 
+victimas <- 
+  victimas %>% 
   mutate(mes_num = case_when(mes == "enero" ~ 1,
                              mes == "febrero" ~ 2,
                              mes == "marzo" ~ 3,
