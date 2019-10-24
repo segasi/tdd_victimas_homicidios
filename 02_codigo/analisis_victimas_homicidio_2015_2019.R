@@ -15,9 +15,10 @@ victimas <-
          key = "mes",
          value = "numero")
 
-### Generar diversas variable relacionadas con el tiempo y reordenar columnas ----
+### Generar diversas variables ----
 victimas <- 
   victimas %>% 
+  # Generar variables
   mutate(mes_num = case_when(mes == "enero" ~ 1,
                              mes == "febrero" ~ 2,
                              mes == "marzo" ~ 3,
@@ -30,5 +31,7 @@ victimas <-
                              mes == "octubre" ~ 10,
                              mes == "noviembre" ~ 11,
                              mes == "diciembre" ~ 12), 
-         fecha = make_date(ano, mes_num)) %>% 
+         fecha = make_date(ano, mes_num),
+         admin = ifelse(fecha < as.Date("2018-12-01"), "Peña Nieto", "AMLO")) %>% 
+  # Reordenar variables
   select(fecha, año = ano, mes, mes_num, everything())
