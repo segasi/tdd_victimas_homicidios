@@ -311,3 +311,35 @@ victimas %>%
         legend.direction = "horizontal") +
   ggsave("03_graficas/numero_acumulado_mensual_victimas_homicidio_doloso_por_año.png", width = 14.5, height = 10, dpi = 200)
 
+
+
+### Gráfica de la comparación mensual interanual del numero de víctimas de homicidio doloso, 2015-2019 ----
+victimas %>% 
+  filter(fecha < as_date("2019-10-01")) %>% 
+  group_by(fecha, subtipo_de_delito) %>% 
+  summarise(victimas_x_mes = sum(numero), 
+            mes = str_to_title(last(mes)),
+            año = mean(año), 
+            admin = last(admin)) %>% 
+  ungroup() %>%  
+  filter(subtipo_de_delito == "Homicidio doloso") %>% 
+  mutate(mes = fct_relevel(mes, "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")) %>% 
+  ggplot(aes(x = año, y = victimas_x_mes)) +
+  geom_line(size = 2, color = "#af272f", alpha = 0.8) +
+  geom_point(size = 3, color = "#af272f", alpha = 0.9) +
+  scale_y_continuous(labels = comma, breaks = seq(0, 3000, 250)) +
+  facet_wrap(~ mes, ncol = 12) +
+  labs(title = str_wrap(str_to_upper("Comparación mensual interanual del numero de víctimas de homicidio doloso, 2015-2019"), width = 70),
+       subtitle = "Datos a septiembre de 2019",
+       x = "\n",
+       y = "Víctimas por mes\n",
+       caption = "@segasi / Fuente: SNSP") +
+  tema +
+  theme(panel.grid = element_line(linetype = 3, size = 0.6, color = "grey90"),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 12),
+        strip.background = element_rect(fill = "grey40", color = "grey40"),
+        strip.text = element_text(color = "white", size = 14),
+        panel.spacing = unit(1, "lines")) +
+  ggsave("03_graficas/comparacion_mensual_interanual_numero_victimas_homicidio_doloso.png", width = 16, height = 10, dpi = 200)
+
+
