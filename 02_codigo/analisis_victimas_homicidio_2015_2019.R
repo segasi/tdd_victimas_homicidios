@@ -375,3 +375,30 @@ victimas %>%
         strip.text = element_text(color = "white", size = 14)) +
   ggsave("03_graficas/numero_mensual_victimas_homicidio_doloso_por_edo.png", width = 20, height = 12, dpi = 200)
 
+
+
+### Gráfica del número mensual de víctimas de cada subtipo de delito, 2015-2019 ----
+victimas %>% 
+  filter(fecha < as_date("2019-10-01")) %>% 
+  group_by(fecha, subtipo_de_delito) %>% 
+  summarise(victimas_x_mes = sum(numero), 
+            admin = last(admin)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = fecha, 
+             y = victimas_x_mes)) + 
+  geom_smooth(se = F, color = "salmon") +
+  geom_line() +
+  scale_y_continuous(labels = comma) +
+  labs(title = str_wrap(str_to_upper("Número mensual de víctimas por subtipo de delito, 2015-2019"), width = 80),
+       subtitle = str_wrap("Para facilitar el análisis de la evolución del número mensual de víctimas de cada subtipo de delitos (método LOESS, línea roja), el rango de valores del eje vertical es diferente en cada panel. Como resultado, los datos de un estado no son necesariamente comparables con los de otros.", width = 200),
+       x = "\n",
+       y = "Víctimas mensuales\n",
+       caption = "@segasi / Fuente: SNSP") +
+  facet_wrap(~ str_wrap(subtipo_de_delito, width = 30), scales = "free_y", ncol = 5) +
+  tema +
+  theme(axis.text = element_text(size = 14),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        strip.background = element_rect(fill = "grey40", color = "grey40"),
+        strip.text = element_text(color = "white", size = 14)) +
+  ggsave("03_graficas/numero_mensual_victimas_por_subtipo_de_delito.png", width = 20, height = 12, dpi = 200)
+
