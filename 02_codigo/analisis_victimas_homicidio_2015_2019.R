@@ -343,3 +343,35 @@ victimas %>%
   ggsave("03_graficas/comparacion_mensual_interanual_numero_victimas_homicidio_doloso.png", width = 16, height = 10, dpi = 200)
 
 
+### Gráfica del número mensual de víctimas de homicidio por entidad, 2015-2019 ----
+victimas %>% 
+  filter(fecha < as_date("2019-10-01"),
+         subtipo_de_delito == "Homicidio doloso") %>% 
+  group_by(fecha, entidad) %>% 
+  summarise(victimas_x_mes = sum(numero), 
+            admin = last(admin)) %>% 
+  ungroup() %>% 
+  mutate(entidad = case_when(str_detect(entidad, "Coahuila") ~ "Coahuila",
+                             str_detect(entidad, "Micho") ~ "Michoacán",
+                             str_detect(entidad, "Veracruz") ~ "Veracruz",
+                             str_detect(entidad, "Ciudad de") ~ "CDMX",
+                             TRUE ~ entidad)) %>% 
+  ggplot(aes(x = fecha,
+             y = victimas_x_mes)) +
+  annotate(geom = "rect",  xmin = as_date("2018-12-01"), xmax = as_date("2019-09-01"), ymin = -Inf, ymax = Inf, fill = "#af272f", alpha = 0.3) +
+  geom_smooth(se = F, color = "salmon") +
+  geom_line() +
+  scale_y_continuous(labels = comma) +
+  labs(title = str_wrap(str_to_upper("Número mensual de víctimas de homicidio por entidad, 2015-2019"), width = 80),
+       subtitle = str_wrap("Para facilitar el análisis de la evolución del número mensual de víctimas en cada entidad (método LOESS, línea roja), el rango de valores del eje vertical es diferente en cada panel. Como resultado, los datos de un estado no son necesariamente comparables con los de otros.", width = 200), 
+       x = "\n",
+       y = "Víctimas mensuales\n",
+       caption = "@segasi / Fuente: SNSP") +
+  facet_wrap(~ entidad, ncol = 8, scales = "free_y" ) +
+  tema +
+  theme(axis.text = element_text(size = 14),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        strip.background = element_rect(fill = "grey40", color = "grey40"),
+        strip.text = element_text(color = "white", size = 14)) +
+  ggsave("03_graficas/numero_mensual_victimas_homicidio_doloso_por_edo.png", width = 20, height = 12, dpi = 200)
+
