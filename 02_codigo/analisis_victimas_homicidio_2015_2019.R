@@ -185,3 +185,120 @@ victimas %>%
         legend.position = c(0.85, -0.12), 
         legend.direction = "horizontal") +
   ggsave("03_graficas/numero_acumulado_mensual_victimas_homicidio_doloso_por_año.png", width = 14.5, height = 10, dpi = 200)
+
+
+### Gráfica del número y tendencia de víctimas mensuales de homicidio doloso, 2015-2019 ----
+
+# Generar vector con fechas
+fechas <- 
+  victimas %>% 
+  filter(fecha < as_date("2019-10-01")) %>% 
+  distinct(fecha) %>% 
+  arrange(fecha) %>% 
+  pull()
+
+# Generar vector con los datos a desagregar
+datos <- 
+  victimas %>% 
+  filter(fecha < as_date("2019-10-01")) %>% 
+  group_by(fecha, subtipo_de_delito) %>% 
+  summarise(victimas_x_mes = sum(numero)) %>% 
+  ungroup() %>%
+  filter(subtipo_de_delito == "Homicidio doloso") %>%
+  select(victimas_x_mes) %>% 
+  pull()
+
+# Transformar datos en objeto ts
+datos_ts <- ts(datos, start = 2015, frequency = 12)
+
+# Separar con método X11
+separacion_x11 <- datos_ts %>% seas(x11 = "") 
+tendencia_x11 <- trendcycle(separacion_x11)
+ajuste_estacional_x11 <- seasadj(separacion_x11)
+
+# Juntar en un tibble la tendencia y el ajuste estacional
+datos_x11 <- 
+  tibble(fecha = fechas, 
+         tendencia_x11 = trendcycle(separacion_x11),
+         ajuste_estacional_x11 = seasadj(separacion_x11))
+
+# Separar con método STL
+datos_stl <- 
+  datos_ts %>% 
+  stl(t.window = 13, s.window = 7, robust = F) %>% 
+  sweep::sw_tidy_decomp()
+
+
+# Juntar los resultados obtenidos con ambos métodos
+datos_todos <- bind_cols(datos_stl, datos_x11)
+
+# Procesar datos para graficar
+datos_para_grafica <- 
+  datos_todos %>% 
+  gather(key = "variable",
+         value = "valor",
+         -c(index, fecha)) %>% 
+  mutate(variable = case_when(variable == "observed" ~ "Valores observados",
+                              variable == "tendencia_x11" ~ "Tendencia-cíclo | Método X11",
+                              variable == "trend" ~ "Tendencia-cíclo | Método STL",
+                              TRUE ~ variable))
+
+# Graficar
+datos_para_grafica %>%
+  filter(variable %in% c("Valores observados", "Tendencia-cíclo | Método X11", "Tendencia-cíclo | Método STL")) %>%  
+  mutate(variable  = fct_relevel(variable, "Valores observados", "Tendencia-cíclo | Método X11", "Tendencia-cíclo | Método STL")) %>% 
+  arrange(desc(variable)) %>% 
+  ggplot(aes(x = fecha, y = valor, color = variable)) +
+  annotate(geom = "rect", 
+           xmin = as_date("2018-12-01"), 
+           xmax = as_date("2019-09-01"),
+           ymin = -Inf, ymax = Inf, fill = "#af272f", alpha = 0.3) +
+  annotate(geom = "text", x = as_date("2018-06-15"), y = min(datos_para_grafica$valor[datos_para_grafica$variable == "Valores observados"] - 10), label = "Peña Nieto", fontface = "bold", color = "grey40", hjust = 0.5, size = 8, family = "Trebuchet MS Bold") +
+  annotate(geom = "text", x = as_date("2019-04-20"), y = min(datos_para_grafica$valor[datos_para_grafica$variable == "Valores observados"] - 10), label = "AMLO", fontface = "bold", color = "white", size = 8, family = "Trebuchet MS Bold") +
+  geom_line(size = 2, alpha = 0.8) +
+  # Recuadro primer punto de inflexión
+  annotate(geom = "rect", 
+           xmin = as_date("2017-10-15"), 
+           xmax = as_date("2018-01-15"),
+           ymin = 2550, ymax = 2740, 
+           fill = "transparent", 
+           color = "grey30",
+           size = 1) +
+  # Texto primer punto de inflexión
+  annotate(geom = "text", x = as_date("2017-11-23"), y = 2400, label = "Primer punto\nde inflexión", fontface = "bold", color = "grey40", hjust = 0.5, size = 4, family = "Trebuchet MS Bold") +
+  # Línea guía primer punto de inflexión
+  annotate(geom = "segment", x = as_date("2017-11-27"), xend = as_date("2017-11-27"), y = 2470, yend = 2530, color = "grey30") +
+  # Recuadro segundo punto de inflexión
+  annotate(geom = "rect", 
+           xmin = as_date("2018-09-15"), 
+           xmax = as_date("2018-11-15"),
+           ymin = 2830, ymax = 2930, 
+           fill = "transparent", 
+           color = "grey30",
+           size = 1) +
+  # Texto segundo punto de inflexión
+  annotate(geom = "text", x = as_date("2018-10-10"), y = 2650, label = "Segundo punto\nde inflexión", fontface = "bold", color = "grey40", hjust = 0.5, size = 4, family = "Trebuchet MS Bold") +
+  # Línea guía segundos puntos de inflexión
+  annotate(geom = "segment", x = as_date("2018-10-15"), xend = as_date("2018-10-15"), y = 2710, yend = 2820, color = "grey30") +
+  scale_x_date(breaks = seq(from = as_date("2015-01-01"), length = 11, by = "6 month"), date_labels = "%b %Y") +
+  scale_y_continuous(labels = comma, breaks = seq(0, 3000, 250)) +
+  scale_color_manual(values = c("grey70", "salmon", "steelblue")) +
+  labs(title = str_wrap(str_to_upper("Víctimas mensuales de homicidio doloso, 2015-2019"), width = 70),
+       subtitle = "Datos a septiembre de 2019",
+       x = "\n",
+       y = "Número de víctimas\n",
+       color = NULL, 
+       caption = "@segasi / Fuente: SNSP\n") +
+  tema +
+  theme(plot.title = element_text(size = 30),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 16),
+        legend.background = element_rect(color = "transparent", fill = "#ffffff30"),
+        legend.position = c(0.155, 0.86), 
+        legend.direction = "vertical") +
+  ggsave("03_graficas/numero_mensual_y_tendencia_victimas_homicidio_doloso.png", width = 16, height = 10, dpi = 200)
+
+
+
+
+
