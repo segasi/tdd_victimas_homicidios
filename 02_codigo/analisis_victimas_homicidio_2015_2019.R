@@ -298,6 +298,13 @@ datos_para_grafica %>%
         legend.direction = "vertical") +
   ggsave("03_graficas/numero_mensual_y_tendencia_victimas_homicidio_doloso.png", width = 16, height = 10, dpi = 200)
 
+# Tabla con los datos observados, las dos tendencias y sus respectivos cambios mensuales
+datos_todos %>% 
+  select(index, fecha, observed, trend, tendencia_x11) %>% 
+  mutate(cambio_trend = trend - lag(trend),
+         cambio_tendencia_x11 = as.numeric(tendencia_x11) - lag(as.numeric(tendencia_x11))) %>% 
+  select(index, fecha, observed, trend, cambio_trend, tendencia_x11, cambio_tendencia_x11) %>% 
+  print(n = Inf)
 
 
 
