@@ -402,3 +402,5 @@ victimas %>%
         strip.text = element_text(color = "white", size = 14)) +
   ggsave("03_graficas/numero_mensual_victimas_por_subtipo_de_delito.png", width = 20, height = 12, dpi = 200)
 
+
+# Nomás mostrando cómo funciona Github a la banda
